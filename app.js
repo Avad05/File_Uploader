@@ -1,11 +1,11 @@
-require('dotenv').config;
+require('dotenv').config();
 const express = require('express');
 const path = require('node:path');
 const session = require('express-session');
 const passport = require('passport');
 const pgSession = require('connect-pg-simple')(session);
-const mainroute = require('./routes/main');
-
+const mainRouter = require('./routes/main');
+const prisma = require('./lib/prisma');
 const app = express();
 
 app.set('views', path.join(__dirname, 'views'));
@@ -16,7 +16,7 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.static('public'))
 app.use(session({ 
   store: new pgSession({
-    pool: pool,
+    pool: prisma,
     tableName: 'session' 
   }),
   secret: process.env.SESSION_SECRET || "cats",
@@ -30,4 +30,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/', mainroute);
+app.use('/', mainRouter);
+
+const PORT = process.env.PORT;
+app.listen(PORT, ()=>{console.log(`Server running on PORT ${PORT}`)})
