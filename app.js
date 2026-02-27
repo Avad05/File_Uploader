@@ -5,6 +5,7 @@ const session = require('express-session');
 const passport = require('passport');
 const pgSession = require('connect-pg-simple')(session);
 const mainRouter = require('./routes/main');
+const authRouter = require('./routes/auth');
 const prisma = require('./lib/prisma');
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/', mainRouter);
+app.use('/auth', authRouter);
 
 const PORT = process.env.PORT;
 app.listen(PORT, ()=>{console.log(`Server running on PORT ${PORT}`)})
