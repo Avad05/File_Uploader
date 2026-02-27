@@ -1,7 +1,7 @@
 const passport = require('passport');
 const LocalStratergy = require('passport-local');
 const bcrypt = require('bcrypt');
-import { prisma } from '../lib/prisma.js';
+const { prisma }  = require('../lib/prisma.js');
 
 passport.use(
   new LocalStratergy({usernameField: 'email'}, async (email, password, done) => {
