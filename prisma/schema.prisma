@@ -31,3 +31,10 @@ model Uploads{
   userId Int
   user User @relation(fields: [userId], references: [id])
 }
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String    // MediumText may be needed for MySql
+  expiresAt   DateTime
+}

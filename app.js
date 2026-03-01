@@ -3,10 +3,11 @@ const express = require('express');
 const path = require('node:path');
 const session = require('express-session');
 const passport = require('passport');
-const pgSession = require('connect-pg-simple')(session);
+const {PrismaSessionStore} = require('@quixo3/prisma-session-store');
 const mainRouter = require('./routes/main');
 const authRouter = require('./routes/auth');
-const prisma = require('./lib/prisma');
+const fileRouter = require('./routes/files');
+const {prisma} = require('./lib/prisma');
 const app = express();
 
 app.set('views', path.join(__dirname, 'views'));
@@ -15,24 +16,29 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({extended: false}));
 app.use(express.static('public'))
-app.use(session({ 
-  store: new pgSession({
-    pool: prisma,
-    tableName: 'session' 
-  }),
-  secret: process.env.SESSION_SECRET || "cats",
-  resave: false, 
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24, 
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax'
-  }
-}));
+app.use(
+  session({
+    cookie: {
+     maxAge: 7 * 24 * 60 * 60 * 1000 // ms
+    },
+    secret: 'a santa at nasa',
+    resave: true,
+    saveUninitialized: true,
+    store: new PrismaSessionStore(
+      prisma,
+      {
+        checkPeriod: 2 * 60 * 1000,  //ms
+        dbRecordIdIsSessionId: true,
+        dbRecordIdFunction: undefined,
+      }
+    )
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/', mainRouter);
 app.use('/auth', authRouter);
+app.use('/files', fileRouter);
 
 const PORT = process.env.PORT;
 app.listen(PORT, ()=>{console.log(`Server running on PORT ${PORT}`)})

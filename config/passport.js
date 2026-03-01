@@ -4,9 +4,9 @@ const bcrypt = require('bcrypt');
 const { prisma }  = require('../lib/prisma.js');
 
 passport.use(
-  new LocalStratergy({usernameField: 'email'}, async (email, password, done) => {
+  new LocalStratergy({usernameField: 'username'}, async (username, password, done) => {
     try {
-      const user = await prisma.user.findUnique({where: { email } })     
+      const user = await prisma.user.findUnique({where: { email:username } })     
 
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
