@@ -16,6 +16,7 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({extended: false}));
 app.use(express.static('public'))
+console.log("Testing prisma instance:", prisma.session ? "Found session model" : "Session model NOT found");
 app.use(
   session({
     cookie: {
@@ -30,6 +31,7 @@ app.use(
         checkPeriod: 2 * 60 * 1000,  //ms
         dbRecordIdIsSessionId: true,
         dbRecordIdFunction: undefined,
+        modelName: 'session'
       }
     )
   })

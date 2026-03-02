@@ -35,9 +35,19 @@ async function addUserToDb(req, res){
 async function getLoginForm(req, res){
     res.render('login');
 }
+async function logout(req, res, next) {
+    req.logout((err) =>{
+        if(err) {
+            return next(err);
+        }else{
+            res.redirect("/");
+        }
+    })
+}
 
 module.exports = {
     getSignUp,
     addUserToDb,
-    getLoginForm
+    getLoginForm,
+    logout
 };

@@ -7,7 +7,8 @@ authRouter.get('/sign-up', authController.getSignUp);
 authRouter.post('/sign-up', authController.addUserToDb);
 authRouter.get('/login', authController.getLoginForm)
 authRouter.post('/login', passport.authenticate('local', {
-    successRedirect: '/files',
+    successRedirect: '/files/user',
     failureRedirect: '/login'
 }));
+authRouter.get('/logout', authController.logout);
 module.exports = authRouter;
