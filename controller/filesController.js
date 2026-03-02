@@ -14,7 +14,30 @@ const upload = multer({storage: storage});
 
 
 async function userDashboard(req, res){
-    res.render('files');
+    const urlId = parseInt(req.params.userId);
+    const loggedId = req.user.id;
+    if(urlId !== loggedId){
+        return res.status(500).send("Unauthorised Access XDXD");
+    }
+
+    try{
+        const userFiles = await prisma.uploads.findMany({
+            where:{
+                userId:loggedId 
+            },
+            orderBy:{
+                createdAt: 'desc'
+            }
+        })
+        res.render('files',{ 
+            user: req.user,
+            files: userFiles
+
+    });
+    }catch(err){
+        res.status(501).send(`Error while fetching files ${err}`);
+    }
+    
 }
 
 async function uploadFile(req, res){
@@ -34,8 +57,24 @@ async function uploadFile(req, res){
         res.status(500).send(`Upload Error ${err}`);
     }
 }
+
+async function deleteFile(req, res){
+    const fileid = req.params.fileId;
+    const loggedId = req.user.id;
+    try{
+    const deleteFile = await prisma.uploads.delete({
+        where:{
+            id: parseInt(fileid)
+        }
+    })
+    res.redirect(`/files/${loggedId}/dashboard`);
+}catch(err){
+    res.status(502).send(`Deleting Error ${err}`);
+}
+}
 module.exports = {
     userDashboard,
     uploadFile,
-    upload
+    upload,
+    deleteFile
 };
