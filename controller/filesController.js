@@ -29,9 +29,19 @@ async function userDashboard(req, res){
                 createdAt: 'desc'
             }
         })
+
+        const userFolders = await prisma.folders.findMany({
+            where:{
+                userId: loggedId
+            },
+            orderBy:{
+                createdAt: 'desc'
+            }
+        })
         res.render('files',{ 
             user: req.user,
-            files: userFiles
+            files: userFiles,
+            folders: userFolders
 
     });
     }catch(err){

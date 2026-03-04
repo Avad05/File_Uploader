@@ -7,6 +7,21 @@
 </head>
 <body>
     <h1>your files are displayed here</h1>
+    <button id="openFolderModal">Add Folder</button>
+
+    <dialog id="folderDialog">
+  <form method="post" action="/folder/create-folder">
+    <h3>Create New Folder</h3>
+    <label for="folderName">Folder Name:</label>
+    <input type="text" name="folderName" id="folderName" required placeholder="e.g. University Projects">
+    
+    <div class="modal-buttons">
+      <button type="button" id="closeFolderModal">Cancel</button>
+      <button type="submit">Create</button>
+    </div>
+  </form>
+</dialog>
+
     <form method="post" action="/files/<%= user.id %> /dashboard" enctype="multipart/form-data">
      <label for="fileSelect">Select a file</label>
      <input type="file" name="fileSelect" id="fileSelect" required><br/>
@@ -41,11 +56,48 @@
         </tr>
       <% }) %>
     </tbody>
-  </table>
+  </table><br/>
 <% } else { %>
   <p>You haven't uploaded any files yet.</p>
 <% } %>
 
+
+   <table border="2">
+    <thead>
+      <tr>
+        <th>Folder Name</th>
+        <th>Created-At</th>
+      </tr>
+    </thead>
+    <tbody>
+         <% folders.forEach(element => { %>
+            <tr>
+              <td><a href="/folders/<%= folders.id %> "><%= element.name %></a></td>
+              <td><%= element.createdAt %> </td> 
+            </tr> 
+         <% }) %>
+    </tbody>
+    </table> 
+
     <a href="/auth/logout"><button type="submit">Logout</button></a>
+
+    <script>
+        const modal = document.getElementById('folderDialog');
+        const openBtn = document.getElementById('openFolderModal');
+        const closeBtn = document.getElementById('closeFolderModal');
+        
+        openBtn.addEventListener('click', () => {
+          modal.showModal(); // Standard browser API
+          });
+        
+        closeBtn.addEventListener('click', () => {
+          modal.close();
+        });
+        
+        // Optional: Close if clicking the backdrop
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.close();
+        });
+      </script>
 </body>
 </html>

@@ -18,16 +18,26 @@ model User{
   email String @unique
   name String?
   password String?
+  folders Folders[]
   file Uploads[]
 }
 
+model Folders{
+  id Int @id @default(autoincrement())
+  name String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  uploads Uploads[]
+}
 model Uploads{
   id Int @id @default(autoincrement())
   filename String?
   path String
   size Int
   createdAt DateTime @default(now())
-
+  folder Folders? @relation(fields: [folderId], references: [id])
+  folderId Int?
   userId Int
   user User @relation(fields: [userId], references: [id])
 }
