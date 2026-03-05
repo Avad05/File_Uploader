@@ -1,4 +1,5 @@
 const { prisma } = require('../lib/prisma');
+const multer = require('multer');
 
 async function createFolder(req, res) {
   const { folderName } = req.body;
@@ -18,10 +19,54 @@ async function createFolder(req, res) {
 }
 
 async function getFolderContent(req, res) {
-    res.render('folder');
+    const folderId = parseInt(req.params.folderId);
+    const folder = await prisma.folders.findUnique({
+      where: {id: folderId},
+      include:{
+        uploads:true
+      }
+    });
+    if (!folder) {
+            return res.status(404).send('Folder not found');
+        }
+
+    if(folder.userId !== req.user.id){
+      return res.status(403).send('Unauthorised Access');
+    }
+    res.render('folder', {folderId, files: folder.uploads, folderName: folder.name, user:req.user});
 }
 
+const storage = multer.diskStorage({
+    destination:(req, file, cb) =>{
+        cb(null, 'public/uploads/');
+    },
+   filename:(req, file, cb) =>{
+    cb(null, Date.now() + '-' + file.originalname);
+   }
+})
+const upload = multer({storage: storage});
+
+async function uploadFileInFolder (req, res){
+  try{
+    const {fileName} = req.body;
+    await prisma.uploads.create({
+      data:{
+        filename: fileName || req.file.originalname,
+        path: req.file.path,
+        size: req.file.size,
+        userId: req.user.id,
+        folderId: parseInt(req.params.folderId)
+      }
+    })
+    res.redirect(`/folder/${parseInt(req.params.folderId)}`);
+  }catch(err){
+    res.status(510).send(`Error Uploading File ${err}`);
+  }
+}
 module.exports = {
     createFolder,
-    getFolderContent
+    getFolderContent,
+    upload,
+    uploadFileInFolder
+
 };

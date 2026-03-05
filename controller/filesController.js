@@ -53,6 +53,7 @@ async function userDashboard(req, res){
 async function uploadFile(req, res){
     try{
         const {fileName} = req.body;
+        const userId = req.user.id;
         console.log(fileName);
         await prisma.uploads.create({
             data:{
@@ -62,7 +63,7 @@ async function uploadFile(req, res){
                 userId: req.user.id
             }
         });
-        res.redirect('/files/user');
+        res.redirect(`/files/${userId}/dashboard`);
     }catch(err){
         res.status(500).send(`Upload Error ${err}`);
     }
