@@ -26,6 +26,9 @@ model Folders{
   id Int @id @default(autoincrement())
   name String
   createdAt DateTime @default(now())
+  parentId Int?  //if this is null then this is the parent folder
+  parent Folders? @relation("FolderstoFolders", fields: [parentId], references: [id], onDelete: Cascade)
+  children Folders[] @relation("FolderstoFolders")
   user User @relation(fields: [userId], references: [id])
   userId Int
   uploads Uploads[]
@@ -36,7 +39,7 @@ model Uploads{
   path String
   size Int
   createdAt DateTime @default(now())
-  folder Folders? @relation(fields: [folderId], references: [id])
+  folder Folders? @relation(fields: [folderId], references: [id], onDelete: Cascade)
   folderId Int?
   userId Int
   user User @relation(fields: [userId], references: [id])

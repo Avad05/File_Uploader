@@ -16,6 +16,11 @@ const upload = multer({storage: storage});
 async function userDashboard(req, res){
     const urlId = parseInt(req.params.userId);
     const loggedId = req.user.id;
+
+    if(isNaN(urlId)){
+        res.status(400).send('Invalid UserId format.');
+    }
+
     if(urlId !== loggedId){
         return res.status(500).send("Unauthorised Access XDXD");
     }
@@ -23,7 +28,8 @@ async function userDashboard(req, res){
     try{
         const userFiles = await prisma.uploads.findMany({
             where:{
-                userId:loggedId 
+                userId:loggedId,
+                folderId: null 
             },
             orderBy:{
                 createdAt: 'desc'
@@ -32,16 +38,19 @@ async function userDashboard(req, res){
 
         const userFolders = await prisma.folders.findMany({
             where:{
-                userId: loggedId
+                userId: loggedId,
+                parentId: null
             },
             orderBy:{
                 createdAt: 'desc'
             }
         })
+        console.log(userFolders)
         res.render('files',{ 
             user: req.user,
             files: userFiles,
-            folders: userFolders
+            folders: userFolders,
+            
 
     });
     }catch(err){

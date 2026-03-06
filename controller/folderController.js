@@ -1,17 +1,19 @@
 const { prisma } = require('../lib/prisma');
 const multer = require('multer');
+const fs = require('fs/promises');
 
 async function createFolder(req, res) {
-  const { folderName } = req.body;
+  const { folderName, parentId } = req.body;
   
   try {
     await prisma.folders.create({
       data: {
         name: folderName,
-        userId: req.user.id // Ensure Passport is protecting this route
+        userId: req.user.id,
+        parentId: parentId ? parseInt(parentId) : null
       }
     });
-    res.redirect(`/files/${req.user.id}/dashboard`);
+    res.redirect(parentId ? `/folder/${parseInt(parentId)}`:`/files/${req.user.id}/dashboard`);
   } catch (err) {
     console.error(err);
     res.status(500).send("Could not create folder.");
@@ -20,12 +22,18 @@ async function createFolder(req, res) {
 
 async function getFolderContent(req, res) {
     const folderId = parseInt(req.params.folderId);
+
+    if(isNaN(folderId)){
+      res.status(400).send('Invalid folder id content.')
+    }
     const folder = await prisma.folders.findUnique({
       where: {id: folderId},
       include:{
-        uploads:true
+        uploads:true,
+        children:true
       }
     });
+    console.log(folder)
     if (!folder) {
             return res.status(404).send('Folder not found');
         }
@@ -33,7 +41,7 @@ async function getFolderContent(req, res) {
     if(folder.userId !== req.user.id){
       return res.status(403).send('Unauthorised Access');
     }
-    res.render('folder', {folderId, files: folder.uploads, folderName: folder.name, user:req.user});
+    res.render('folder', {folderId, files: folder.uploads, folderName: folder.name, user:req.user, subFolders: folder.children});
 }
 
 const storage = multer.diskStorage({
@@ -63,10 +71,46 @@ async function uploadFileInFolder (req, res){
     res.status(510).send(`Error Uploading File ${err}`);
   }
 }
+async function deleteFolder(req, res) {
+    const folderId = parseInt(req.params.folderId);
+
+    try {
+        // 1. Fetch folder info BEFORE deleting so we know where to go back to
+        const folder = await prisma.folders.findUnique({
+            where: { id: folderId },
+            select: { parentId: true, userId: true }
+        });
+
+        if (!folder || folder.userId !== req.user.id) {
+            return res.status(403).send("Unauthorized or Folder not found");
+        }
+
+        // 2. (Optional) Cleanup physical files in this folder from your Arch drive
+        // [Logic to loop through uploads and fs.unlink goes here]
+
+        // 3. Delete from Database
+        await prisma.folders.delete({
+            where: { id: folderId }
+        });
+
+        // 4. Conditional Redirect
+        if (folder.parentId) {
+            // It was a subfolder, go back to the parent folder
+            return res.redirect(`/folder/${folder.parentId}`);
+        } else {
+            // It was a top-level folder, go back to the dashboard
+            return res.redirect(`/files/${req.user.id}/dashboard`);
+        }
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("Error deleting folder.");
+    }
+}
 module.exports = {
     createFolder,
     getFolderContent,
     upload,
-    uploadFileInFolder
-
+    uploadFileInFolder,
+    deleteFolder
 };

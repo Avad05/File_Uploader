@@ -61,24 +61,33 @@
   <p>You haven't uploaded any files yet.</p>
 <% } %>
 
-
-   <table border="2">
-    <thead>
-      <tr>
-        <th>Folder Name</th>
-        <th>Created-At</th>
-      </tr>
-    </thead>
-    <tbody>
-         <% folders.forEach(element => { %>
-            <tr>
-              <td><a href="/folder/<%= element.id %> "><%= element.name %></a></td>
-              <td><%= element.createdAt %> </td> 
-            </tr> 
-         <% }) %>
-    </tbody>
-    </table> 
-
+    <% if (folders.length > 0) { %>
+     <table border="2">
+      <thead>
+        <tr>
+          <th>Folder Name</th>
+          <th>Created-At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+       
+           <% folders.forEach(element => { %>
+              <tr>
+                <td><a href="/folder/<%= element.id %> "><%= element.name %></a></td>
+                <td><%= element.createdAt %> </td> 
+                <td>
+                 <form action="/folder/delete/<%= element.id %>" method="post" style="display:inline;">
+                       <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
+                 </form>
+                </td>
+              </tr> 
+           <% }) %>
+      </tbody>
+      </table> 
+  <% } else{%>
+    <br/>
+    <% } %> 
     <a href="/auth/logout"><button type="submit">Logout</button></a>
 
     <script>
@@ -87,14 +96,13 @@
         const closeBtn = document.getElementById('closeFolderModal');
         
         openBtn.addEventListener('click', () => {
-          modal.showModal(); // Standard browser API
+          modal.showModal(); 
           });
         
         closeBtn.addEventListener('click', () => {
           modal.close();
         });
         
-        // Optional: Close if clicking the backdrop
         modal.addEventListener('click', (e) => {
           if (e.target === modal) modal.close();
         });

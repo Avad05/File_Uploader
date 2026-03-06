@@ -43,6 +43,12 @@ app.use('/', mainRouter);
 app.use('/auth', authRouter);
 app.use('/files', fileRouter);
 app.use('/folder', folderRouter);
+app.use((req, res) => {
+    res.status(404).render('404', { 
+        title: "Page Not Found",
+        user: req.user 
+    });
+});
 
 const PORT = process.env.PORT;
 app.listen(PORT, ()=>{console.log(`Server running on PORT ${PORT}`)})

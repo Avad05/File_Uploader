@@ -17,4 +17,5 @@ authRouter.post('/login', (req, res, next) => {
 }) (req, res, next);
 });
 authRouter.get('/logout', authController.logout);
+authRouter.get('/check-username', authController.checkUsername);
 module.exports = authRouter;

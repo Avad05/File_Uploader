@@ -44,10 +44,24 @@ async function logout(req, res, next) {
         }
     })
 }
+async function checkUsername(req, res) {
+    const { username } = req.query;
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email: username } 
+        });
+        
+        // if user exists, taken is true
+        res.json({ taken: !!user });
+    } catch (err) {
+        res.status(500).json({ error: "Database check failed" });
+    }
+}
 
 module.exports = {
     getSignUp,
     addUserToDb,
     getLoginForm,
-    logout
+    logout,
+    checkUsername
 };

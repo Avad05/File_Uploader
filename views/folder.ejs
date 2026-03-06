@@ -7,6 +7,20 @@
 </head>
 <body>
     <h1><%= folderName %>  </h1>
+    <button id="openFolderModal">Add Folder</button>
+    <dialog id="folderDialog">
+      <form method="post" action="/folder/create-folder">
+        <h3>Create New Sub-Folder</h3>
+        <label for="folderName">Folder Name:</label>
+        <input type="text" name="folderName" id="folderName" required placeholder="e.g. University Projects">        
+        <input type="hidden" name="parentId" value="<%= folderId %> ">
+        <div class="modal-buttons">
+          <button type="button" id="closeFolderModal">Cancel</button>
+          <button type="submit">Create</button>
+        </div>
+      </form>
+    </dialog>
+
     <form method="post" action="/folder/<%= folderId %>" enctype="multipart/form-data">
      <label for="fileSelect">Select a file</label>
      <input type="file" name="fileSelect" id="fileSelect" required><br/>
@@ -46,6 +60,51 @@
   <p>You haven't uploaded any files yet.</p>
 <% } %>
 
+ <% if (subFolders.length > 0) { %>
+    <table border="2">
+      <thead>
+        <tr>
+          <th>Folder Name</th>
+          <th>Created-At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+           <% subFolders.forEach(element => { %>
+              <tr>
+                <td><a href="/folder/<%= element.id %> "><%= element.name %></a></td>
+                <td><%= element.createdAt %> </td> 
+                <td>
+                  <form action="/folder/delete/<%= element.id %>" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
+                  </form>
+                </td>
+              </tr> 
+           <% }) %>
+      </tbody>
+    </table> 
+   <% } else {%>
+    <br/>
+    <% } %> 
 <a href="/files/<%= user.id %>/dashboard "><button type="submit">Return to DashBoard </button></a>
+ 
+      <script>
+        const modal = document.getElementById('folderDialog');
+        const openBtn = document.getElementById('openFolderModal');
+        const closeBtn = document.getElementById('closeFolderModal');
+        
+        openBtn.addEventListener('click', () => {
+          modal.showModal(); 
+          });
+        
+        closeBtn.addEventListener('click', () => {
+          modal.close();
+        });
+        
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.close();
+        });
+      </script>
+
 </body>
 </html>
