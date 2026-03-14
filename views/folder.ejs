@@ -20,6 +20,19 @@
         </div>
       </form>
     </dialog>
+    <dialog id="shareDialog">
+    <form action="/files/share-folder" method="POST">
+      <input type="hidden" name="folderId" id="shareFolderId">
+      <h3>Share Folder</h3>
+      <label>Link Duration:</label>
+      <select name="duration">
+        <option value="1">1 Day</option>
+        <option value="7">7 Days</option>
+        <option value="30">30 Days</option>
+      </select>
+      <button type="submit">Generate Link</button>
+    </form>
+   </dialog>
 
     <form method="post" action="/folder/<%= folderId %>" enctype="multipart/form-data">
      <label for="fileSelect">Select a file</label>

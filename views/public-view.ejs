@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shared Folder: <%= folder.name %></title>
+    <link rel="stylesheet" href="/styles/main.css"> </head>
+<body>
+    <header>
+        <h1>📁 Shared Folder: <%= folder.name %></h1>
+        <p>Viewing as Guest</p>
+    </header>
+
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+               <% folder.children.forEach(sub => { %>
+                   <tr>
+                       <td>
+                           <a href="/share/<%= shareId %>/<%= sub.id %>">📁 <%= sub.name %></a>
+                       </td>
+                       <td>Folder</td>
+                       <td>--</td>
+                       <td><em>View only</em></td>
+                   </tr>
+               <% }) %>
+
+                <% folder.uploads.forEach(file => { %>
+                    <tr>
+                        <td>📄 <%= file.filename %></td>
+                        <td>File</td>
+                        <td><%= (file.size / 1024).toFixed(2) %> KB</td>
+                        <td>
+                            <a href="/share/download/<%= shareId %>/<%= file.id %>" class="btn-download">Download</a>
+                        </td>
+                    </tr>
+                <% }) %>
+
+                <% if (folder.children.length === 0 && folder.uploads.length === 0) { %>
+                    <tr>
+                        <td colspan="4" style="text-align: center;">This folder is empty.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>This link is temporary and will expire soon.</p>
+    </footer>
+</body>
+</html>

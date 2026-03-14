@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success</title>
+</head>
+<body>
+    <h1>Link Generated!</h1>
+<p>Anyone with this link can view the contents of <strong><%= folderName %></strong>.</p>
+
+<div class="share-box">
+    <input type="text" value="<%= shareUrl %>" id="shareInput" readonly style="width: 80%;">
+    <button onclick="copyToClipboard()">Copy Link</button>
+</div>
+
+<p><em>This link will expire on: <%= expiresAt.toLocaleString() %></em></p>
+
+<a href="/files/<%= user.id %>/dashboard">Back to Dashboard</a>
+
+<script>
+function copyToClipboard() {
+    const copyText = document.getElementById("shareInput");
+    copyText.select();
+    navigator.clipboard.writeText(copyText.value);
+    alert("Link copied to clipboard!");
+}
+</script>
+</body>
+</html>

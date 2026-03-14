@@ -6,7 +6,6 @@
     <title>Files</title>
 </head>
 <body>
-    <h1>your files are displayed here</h1>
     <button id="openFolderModal">Add Folder</button>
 
     <dialog id="folderDialog">
@@ -77,6 +76,12 @@
                 <td><a href="/folder/<%= element.id %> "><%= element.name %></a></td>
                 <td><%= element.createdAt %> </td> 
                 <td>
+                  <button 
+                    class="share-trigger-btn" 
+                    data-id="<%= element.id %>" 
+                    data-name="<%= element.name %>">
+                    Share 🔗
+                  </button
                  <form action="/folder/delete/<%= element.id %>" method="post" style="display:inline;">
                        <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
                  </form>
@@ -90,10 +95,34 @@
     <% } %> 
     <a href="/auth/logout"><button type="submit">Logout</button></a>
 
+    <dialog id="shareModal">
+        <form action="/files/share" method="POST">
+        <h3>Share Folder: <span id="displayFolderName"></span></h3>
+    
+        <input type="hidden" name="folderId" id="modalFolderId">
+
+        <label for="duration">Expiration Duration:</label>
+       <select name="duration" id="duration" required>
+         <option value="1">1 Day</option>
+         <option value="7">7 Days</option>
+         <option value="10">10 Days</option>
+         <option value="30">30 Days</option>
+       </select>
+
+       <div style="margin-top: 20px;">
+         <button type="button" id="closeShareModal">Cancel</button>
+         <button type="submit">Generate Link</button>
+       </div>
+     </form>
+    </dialog>
+
     <script>
         const modal = document.getElementById('folderDialog');
         const openBtn = document.getElementById('openFolderModal');
         const closeBtn = document.getElementById('closeFolderModal');
+        const shareModal = document.getElementById('shareModal');
+        const folderIdInput = document.getElementById('modalFolderId');
+        const folderNameSpan = document.getElementById('displayFolderName');
         
         openBtn.addEventListener('click', () => {
           modal.showModal(); 
@@ -106,6 +135,25 @@
         modal.addEventListener('click', (e) => {
           if (e.target === modal) modal.close();
         });
+
+        document.querySelectorAll('.share-trigger-btn').forEach(button => {
+        button.addEventListener('click', () => {
+        const id = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+
+        // 2. Inject the folder info into the modal
+        folderIdInput.value = id;
+        folderNameSpan.textContent = name;
+
+        // 3. Open the modal
+        shareModal.showModal();
+    });
+});
+
+// Close logic
+document.getElementById('closeShareModal').addEventListener('click', () => {
+    shareModal.close();
+});
       </script>
 </body>
 </html>

@@ -7,6 +7,7 @@ const {PrismaSessionStore} = require('@quixo3/prisma-session-store');
 const mainRouter = require('./routes/main');
 const authRouter = require('./routes/auth');
 const fileRouter = require('./routes/files');
+//const shareFolder = require('./routes/pubic');
 const folderRouter = require('./routes/folders');
 const {prisma} = require('./lib/prisma');
 const app = express();
@@ -43,6 +44,7 @@ app.use('/', mainRouter);
 app.use('/auth', authRouter);
 app.use('/files', fileRouter);
 app.use('/folder', folderRouter);
+//app.use('/share', shareFolder);
 app.use((req, res) => {
     res.status(404).render('404', { 
         title: "Page Not Found",

@@ -32,6 +32,9 @@ model Folders{
   user User @relation(fields: [userId], references: [id])
   userId Int
   uploads Uploads[]
+  shares FolderShare[]
+  shareId   String?  @unique
+  expiresAt DateTime?
 }
 model Uploads{
   id Int @id @default(autoincrement())
@@ -50,4 +53,13 @@ model Session {
   sid       String   @unique
   data      String    // MediumText may be needed for MySql
   expiresAt   DateTime
+}
+
+model FolderShare {
+  id        String   @id @default(uuid()) // A long, unguessable ID
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  folder    Folders   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folderId  Int
 }
