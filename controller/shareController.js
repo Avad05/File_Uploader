@@ -51,30 +51,26 @@ async function publicDownload(req, res) {
     const { shareId, fileId } = req.params;
 
     try {
-        // 1. Find the file and include the parent folder
         const file = await prisma.uploads.findUnique({
             where: { id: parseInt(fileId) },
             include: { folder: true }
         });
 
-        // 2. Security Check: Does the file's folder match the shareId?
-        // This prevents guests from downloading files using random IDs
-        if (!file || file.folder.shareId !== shareId) {
-            return res.status(403).send("Unauthorized access.");
-        }
+        // Security check
+        if (!file || file.folder.shareId !== shareId) return res.status(403).send("Unauthorized");
 
-        // 3. Expiration Check
-        if (file.folder.expiresAt && new Date() > file.folder.expiresAt) {
-            return res.status(410).send("Share link expired.");
-        }
+        // 1. Generate a Signed URL from Supabase (expires in 60 seconds)
+        const { data, error } = await supabase.storage
+            .from('File_Uploader')
+            .createSignedUrl(file.path, 60);
 
-        // 4. Send the file
-        // Ensure file.path is the absolute path on your Arch system
-        res.download(file.path, file.filename);
+        if (error) throw error;
+
+        // 2. Redirect the guest to the Supabase download link
+        res.redirect(data.signedUrl);
 
     } catch (err) {
-        console.error("Download Error:", err);
-        res.status(500).send("Could not process download.");
+        res.status(500).send("Download failed.");
     }
 }
 

@@ -1,6 +1,7 @@
 const { prisma } = require('../lib/prisma');
 const multer = require('multer');
 const fs = require('fs/promises');
+const supabase = require('../lib/supabase');
 
 async function createFolder(req, res) {
   const { folderName, parentId } = req.body;
@@ -54,23 +55,48 @@ const storage = multer.diskStorage({
 })
 const upload = multer({storage: storage});
 
-async function uploadFileInFolder (req, res){
-  try{
-    const {fileName} = req.body;
-    await prisma.uploads.create({
-      data:{
-        filename: fileName || req.file.originalname,
-        path: req.file.path,
-        size: req.file.size,
-        userId: req.user.id,
-        folderId: parseInt(req.params.folderId)
-      }
-    })
-    res.redirect(`/folder/${parseInt(req.params.folderId)}`);
-  }catch(err){
-    res.status(510).send(`Error Uploading File ${err}`);
-  }
+async function uploadFileInFolder(req, res) {
+    try {
+        // 1. Check if file exists
+        if (!req.file) {
+            return res.status(400).send("No file uploaded.");
+        }
+
+        const folderId = parseInt(req.params.folderId);
+        
+        // 2. Construct the Supabase Path
+        // Using req.file instead of 'file'
+        const filePath = `user_${req.user.id}/folder_${folderId}/${Date.now()}_${req.file.originalname}`;
+
+        // 3. UPLOAD TO SUPABASE
+        const { data, error } = await supabase.storage
+            .from('File_Uploader')
+            .upload(filePath, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: false // Prevents overwriting existing files
+            });
+
+        if (error) throw error;
+
+        // 4. SAVE TO PRISMA
+        await prisma.uploads.create({
+            data: {
+                filename: req.body.fileName || req.file.originalname,
+                path: filePath, // Store the Supabase path
+                size: req.file.size,
+                userId: req.user.id,
+                folderId: folderId
+            }
+        });
+
+        res.redirect(`/folder/${folderId}`);
+
+    } catch (err) {
+        console.error("Upload Error:", err);
+        res.status(500).send(`Error Uploading File: ${err.message}`);
+    }
 }
+
 async function deleteFolder(req, res) {
     const folderId = parseInt(req.params.folderId);
 

@@ -1,16 +1,10 @@
 const { prisma } = require('../lib/prisma');
 const multer = require('multer');
+const storage = multer.memoryStorage();
 const path = require('path');
 const crypto = require('crypto');
+const supabase = require('../lib/supabase');
 
-const storage = multer.diskStorage({
-    destination:(req, file, cb) =>{
-        cb(null, 'public/uploads/');
-    },
-   filename:(req, file, cb) =>{
-    cb(null, Date.now() + '-' + file.originalname);
-   }
-})
 const upload = multer({storage: storage});
 
 
@@ -60,38 +54,78 @@ async function userDashboard(req, res){
     
 }
 
-async function uploadFile(req, res){
-    try{
-        const {fileName} = req.body;
-        const userId = req.user.id;
-        console.log(fileName);
+async function uploadFile(req, res) {
+    const file = req.file; // Multer should be configured to use MemoryStorage
+    const { folderId } = req.body;
+
+    // Generate a unique path for the bucket
+    const filePath = `user_${req.user.id}/${Date.now()}_${file.originalname}`;
+
+    try {
+        // 1. Upload to Supabase Bucket
+        const { data, error } = await supabase.storage
+            .from('File_Uploader')
+            .upload(filePath, file.buffer, {
+                contentType: file.mimetype
+            });
+
+        if (error) throw error;
+
+        // 2. Save the Supabase PATH to your Prisma DB (not the local path)
         await prisma.uploads.create({
-            data:{
-                filename: fileName || req.file.originalname,
-                path: req.file.path,
-                size: req.file.size,
+            data: {
+                filename: file.originalname,
+                path: filePath, // This is now the Supabase path
+                size: file.size,
+                folderId: parseInt(folderId),
                 userId: req.user.id
             }
         });
-        res.redirect(`/files/${userId}/dashboard`);
-    }catch(err){
-        res.status(500).send(`Upload Error ${err}`);
+
+        res.redirect(`/files/${req.user.id}/dashboard`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(`Upload failed ${err}`);
     }
 }
 
-async function deleteFile(req, res){
-    const fileid = req.params.fileId;
+async function deleteFile(req, res) {
+    const fileId = req.params.fileId;
     const loggedId = req.user.id;
-    try{
-    const deleteFile = await prisma.uploads.delete({
-        where:{
-            id: parseInt(fileid)
+
+    try {
+        // 1. First, FIND the file in Prisma to get its Supabase path
+        const file = await prisma.uploads.findUnique({
+            where: { id: parseInt(fileId) }
+        });
+
+        if (!file) {
+            return res.status(404).send("File not found.");
         }
-    })
-    res.redirect(`/files/${loggedId}/dashboard`);
-}catch(err){
-    res.status(502).send(`Deleting Error ${err}`);
-}
+
+        // 2. DELETE FROM SUPABASE
+        const { error: storageError } = await supabase.storage
+            .from('File_Uploader')
+            .remove([file.path]); // .remove() expects an array of paths
+
+        if (storageError) {
+            console.error("Supabase Storage Error:", storageError);
+            // Optional: You might still want to proceed with DB deletion 
+            // or stop here if storage cleanup is mandatory.
+        }
+
+        // 3. DELETE FROM PRISMA
+        await prisma.uploads.delete({
+            where: { id: parseInt(fileId) }
+        });
+
+        // Use 'back' to return to the folder they were just in
+        res.redirect(`/files/${loggedId}/dashboard`);
+
+    } catch (err) {
+        console.error("Deletion Error:", err);
+        res.status(502).send(`Deleting Error: ${err.message}`);
+    }
 }
 
 async function downloadFile(req, res){
