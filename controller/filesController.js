@@ -58,7 +58,7 @@ async function uploadFile(req, res) {
     const file = req.file; // Multer should be configured to use MemoryStorage
     const { folderId } = req.body;
 
-    // Generate a unique path for the bucket
+   
     const filePath = `user_${req.user.id}/${Date.now()}_${file.originalname}`;
 
     try {
@@ -75,7 +75,7 @@ async function uploadFile(req, res) {
         await prisma.uploads.create({
             data: {
                 filename: file.originalname,
-                path: filePath, // This is now the Supabase path
+                path: filePath, 
                 size: file.size,
                 folderId: parseInt(folderId),
                 userId: req.user.id
