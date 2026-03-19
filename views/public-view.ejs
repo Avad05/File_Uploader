@@ -2,58 +2,95 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Shared Folder: <%= folder.name %></title>
-    <link rel="stylesheet" href="/styles/main.css"> </head>
-<body>
-    <header>
-        <h1>📁 Shared Folder: <%= folder.name %></h1>
-        <p>Viewing as Guest</p>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Content: <%= folder.name %></title>
+    <link rel="stylesheet" href="/css/output.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#111118] text-gray-200 font-sans min-h-screen flex flex-col">
+
+    <header class="flex items-center justify-between px-8 py-6 border-b border-gray-800/60 bg-[#111118] sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-600/20 rounded-xl flex items-center justify-center border border-indigo-500/30">
+                <i data-lucide="share-2" class="w-6 h-6 text-indigo-500"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white tracking-tight leading-none mb-1">
+                    <%= folder.name %>
+                </h1>
+                <p class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Shared Folder • Guest View</p>
+            </div>
+        </div>
+        <div class="hidden md:block">
+            <span class="px-3 py-1 bg-gray-800/50 rounded-full text-xs text-gray-400 border border-gray-700">
+                Read Only Access
+            </span>
+        </div>
     </header>
 
-    <main>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Size</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-               <% folder.children.forEach(sub => { %>
-                   <tr>
-                       <td>
-                           <a href="/share/<%= shareId %>/<%= sub.id %>">📁 <%= sub.name %></a>
-                       </td>
-                       <td>Folder</td>
-                       <td>--</td>
-                       <td><em>View only</em></td>
-                   </tr>
-               <% }) %>
+    <main class="flex-1 p-6 md:p-12 bg-[#16161e]">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="grid grid-cols-12 px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800/40 mb-4">
+                <div class="col-span-8 md:col-span-7">Name</div>
+                <div class="col-span-4 md:col-span-2 text-right md:text-left">Size</div>
+                <div class="hidden md:block md:col-span-3 text-right">Actions</div>
+            </div>
+
+            <div class="space-y-3">
+                
+                <% folder.children.forEach(sub => { %>
+                    <a href="/share/<%= shareId %>/<%= sub.id %>" class="grid grid-cols-12 items-center px-6 py-4 bg-[#1e1e26] border border-gray-800/50 rounded-xl hover:border-indigo-500/50 transition-all group">
+                        <div class="col-span-8 md:col-span-7 flex items-center">
+                            <i data-lucide="folder" class="w-5 h-5 mr-4 text-indigo-400/70 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-white font-medium truncate"><%= sub.name %></span>
+                        </div>
+                        <div class="col-span-4 md:col-span-2 text-right md:text-left text-gray-500 text-sm">--</div>
+                        <div class="hidden md:block md:col-span-3 text-right">
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-auto text-gray-700 group-hover:text-indigo-400"></i>
+                        </div>
+                    </a>
+                <% }) %>
 
                 <% folder.uploads.forEach(file => { %>
-                    <tr>
-                        <td>📄 <%= file.filename %></td>
-                        <td>File</td>
-                        <td><%= (file.size / 1024).toFixed(2) %> KB</td>
-                        <td>
-                            <a href="/share/download/<%= shareId %>/<%= file.id %>" class="btn-download">Download</a>
-                        </td>
-                    </tr>
+                    <div class="grid grid-cols-12 items-center px-6 py-4 bg-[#1e1e26] border border-gray-800/50 rounded-xl hover:bg-[#25252f] transition-all group">
+                        <div class="col-span-8 md:col-span-7 flex items-center">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-4 text-gray-400"></i>
+                            <span class="text-white font-medium truncate"><%= file.filename %></span>
+                        </div>
+                        <div class="col-span-4 md:col-span-2 text-right md:text-left text-gray-500 text-sm">
+                            <%= (file.size / 1024).toFixed(2) %> KB
+                        </div>
+                        <div class="hidden md:block md:col-span-3 text-right">
+                            <a href="/share/download/<%= shareId %>/<%= file.id %>" 
+                               class="inline-flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-indigo-500/20">
+                                <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
+                                Download
+                            </a>
+                        </div>
+                    </div>
                 <% }) %>
 
                 <% if (folder.children.length === 0 && folder.uploads.length === 0) { %>
-                    <tr>
-                        <td colspan="4" style="text-align: center;">This folder is empty.</td>
-                    </tr>
+                    <div class="py-24 text-center border-2 border-dashed border-gray-800 rounded-3xl">
+                        <i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-700 mb-4"></i>
+                        <p class="text-gray-500">This shared folder is empty.</p>
+                    </div>
                 <% } %>
-            </tbody>
-        </table>
+            </div>
+        </div>
     </main>
 
-    <footer>
-        <p>This link is temporary and will expire soon.</p>
+    <footer class="py-8 px-8 border-t border-gray-800/60 bg-[#111118] text-center">
+        <div class="flex items-center justify-center gap-2 text-gray-600 text-xs mb-1">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+            <p>This secure link is temporary and will expire automatically.</p>
+        </div>
+        <p class="text-[10px] text-gray-700 uppercase tracking-[0.2em] font-bold">Securely Powered by File Uploader</p>
     </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

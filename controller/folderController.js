@@ -34,7 +34,7 @@ async function getFolderContent(req, res) {
         children:true
       }
     });
-    console.log(folder)
+    
     if (!folder) {
             return res.status(404).send('Folder not found');
         }

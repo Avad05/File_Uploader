@@ -3,121 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title><%= folderName %> - File Uploader</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-    <h1><%= folderName %>  </h1>
-    <button id="openFolderModal">Add Folder</button>
-    <dialog id="folderDialog">
-      <form method="post" action="/folder/create-folder">
-        <h3>Create New Sub-Folder</h3>
-        <label for="folderName">Folder Name:</label>
-        <input type="text" name="folderName" id="folderName" required placeholder="e.g. University Projects">        
-        <input type="hidden" name="parentId" value="<%= folderId %> ">
-        <div class="modal-buttons">
-          <button type="button" id="closeFolderModal">Cancel</button>
-          <button type="submit">Create</button>
+<body class="bg-[#111118] text-gray-200 font-sans h-screen overflow-hidden flex flex-col">
+
+    <header class="flex items-center justify-between px-8 py-5 border-b border-gray-800/60 bg-[#111118] z-10">
+        <div class="flex items-center gap-4">
+            <a href="/files/<%= user.id %>/dashboard" class="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-all" title="Back to Dashboard">
+                <i data-lucide="arrow-left" class="w-6 h-6"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-white tracking-tight">File Uploader</h1>
         </div>
-      </form>
+        <a href="/auth/logout" class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800">
+            <i data-lucide="log-out" class="w-6 h-6"></i>
+        </a>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-64 border-r border-gray-800/60 bg-[#111118] flex flex-col p-4 space-y-6">
+            <div class="space-y-3">
+                <button id="openFolderModal" class="flex items-center w-full px-4 py-2.5 text-sm font-medium border border-gray-700 rounded-lg hover:bg-gray-800 transition-all text-gray-300">
+                    <i data-lucide="folder-plus" class="w-4 h-4 mr-3"></i> Sub-Folder
+                </button>
+                <button id="openFileModal" class="flex items-center w-full px-4 py-2.5 text-sm font-medium border border-gray-700 rounded-lg hover:bg-gray-800 transition-all text-gray-300">
+                    <i data-lucide="file-plus" class="w-4 h-4 mr-3"></i> Upload File
+                </button>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto pt-4 border-t border-gray-800/60 text-sm text-gray-500">
+                <p class="px-4 mb-2 uppercase tracking-widest text-[10px] font-bold">Quick Links</p>
+                <a href="/files/<%= user.id %>/dashboard" class="flex items-center px-4 py-2 hover:text-white transition-colors">
+                    <i data-lucide="home" class="w-4 h-4 mr-3"></i> Dashboard
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-10 bg-[#16161e]">
+            <div class="max-w-6xl mx-auto">
+                
+                <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+                    <a href="/files/<%= user.id %>/dashboard" class="hover:text-blue-400">My Files</a>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-700"></i>
+                    <span class="text-blue-400 font-medium"><%= folderName %></span>
+                </nav>
+
+                <div class="grid grid-cols-12 px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-[0.1em]">
+                    <div class="col-span-6">Name</div>
+                    <div class="col-span-2">Size</div>
+                    <div class="col-span-4 text-right">Created At</div>
+                </div>
+
+                <div class="mt-2 space-y-3">
+                    
+                    <% subFolders.forEach(sub => { %>
+                        <div class="grid grid-cols-12 items-center px-6 py-4 bg-[#1e1e26] border border-gray-800/50 rounded-xl hover:border-gray-600 transition-all group">
+                            <div class="col-span-6 flex items-center">
+                                <i data-lucide="folder" class="w-5 h-5 mr-4 text-yellow-500/60"></i>
+                                <a href="/folder/<%= sub.id %>" class="text-white font-medium hover:underline"><%= sub.name %></a>
+                            </div>
+                            <div class="col-span-2 text-gray-500">--</div>
+                            <div class="col-span-4 flex items-center justify-end space-x-4">
+                                <span class="text-gray-500"><%= new Date(sub.createdAt).toLocaleDateString() %></span>
+                                <form action="/folder/delete/<%= sub.id %>" method="POST" onsubmit="return confirm('Delete this folder?')" class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button type="submit" class="p-1 text-gray-400 hover:text-red-400">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <% }) %>
+
+                    <% files.forEach(file => { %>
+                        <div class="grid grid-cols-12 items-center px-6 py-4 bg-[#1e1e26] border border-gray-800/50 rounded-xl hover:border-gray-600 transition-all group">
+                            <div class="col-span-6 flex items-center">
+                                <i data-lucide="file-text" class="w-5 h-5 mr-4 text-blue-500/60"></i>
+                                <span class="text-white font-medium truncate"><%= file.filename %></span>
+                            </div>
+                            <div class="col-span-2 text-gray-500"><%= (file.size / 1024).toFixed(2) %> KB</div>
+                            <div class="col-span-4 flex items-center justify-end space-x-4">
+                                <span class="text-gray-500"><%= file.createdAt.toLocaleDateString() %></span>
+                                <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="/files/download/<%= file.id %>" class="p-1 text-gray-400 hover:text-green-400">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                    </a>
+                                    <form action="/files/delete/<%= file.id %>" method="POST" onsubmit="return confirm('Delete this file?')">
+                                        <button type="submit" class="p-1 text-gray-400 hover:text-red-400">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+
+                    <% if (files.length === 0 && subFolders.length === 0) { %>
+                        <div class="py-20 text-center">
+                            <i data-lucide="folder-open" class="w-12 h-12 mx-auto text-gray-800 mb-4"></i>
+                            <p class="text-gray-600 italic">This folder is currently empty.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <dialog id="folderDialog" class="bg-[#1e1e26] text-white p-8 rounded-2xl border border-gray-700 backdrop:bg-black/70 w-full max-w-md outline-none">
+        <form method="post" action="/folder/create-folder" class="space-y-6">
+            <h3 class="text-xl font-bold text-white">Create New Sub-Folder</h3>
+            <div class="space-y-2">
+                <label class="text-sm text-gray-400">Folder Name</label>
+                <input type="text" name="folderName" required placeholder="Project Assets" class="w-full bg-[#111118] border border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                <input type="hidden" name="parentId" value="<%= folderId %>">
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" id="closeFolderModal" class="px-5 py-2 text-gray-400 hover:text-white">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors">Create</button>
+            </div>
+        </form>
     </dialog>
-    <dialog id="shareDialog">
-    <form action="/files/share-folder" method="POST">
-      <input type="hidden" name="folderId" id="shareFolderId">
-      <h3>Share Folder</h3>
-      <label>Link Duration:</label>
-      <select name="duration">
-        <option value="1">1 Day</option>
-        <option value="7">7 Days</option>
-        <option value="30">30 Days</option>
-      </select>
-      <button type="submit">Generate Link</button>
-    </form>
-   </dialog>
 
-    <form method="post" action="/folder/<%= folderId %>" enctype="multipart/form-data">
-     <label for="fileSelect">Select a file</label>
-     <input type="file" name="fileSelect" id="fileSelect" required><br/>
-     <label for="fileName">Enter Filename(optional)</label>
-     <input type="text" name="fileName" id="fileName"><br/>
-     <button type="submit">Submit</button>
-    </form>
+    <dialog id="fileDialog" class="bg-[#1e1e26] text-white p-8 rounded-2xl border border-gray-700 backdrop:bg-black/70 w-full max-w-md outline-none">
+        <form method="post" action="/folder/<%= folderId %>" enctype="multipart/form-data" class="space-y-6">
+            <h3 class="text-xl font-bold">Upload to <%= folderName %></h3>
+            <div class="space-y-4">
+                <input type="file" name="fileSelect" required class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700">
+                <input type="text" name="fileName" placeholder="Custom Filename (Optional)" class="w-full bg-[#111118] border border-gray-700 p-3 rounded-lg outline-none">
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="document.getElementById('fileDialog').close()" class="px-5 py-2 text-gray-400 hover:text-white">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors">Upload</button>
+            </div>
+        </form>
+    </dialog>
 
-      <% if (files.length > 0) { %>
-  <table border="2">
-    <thead>
-      <tr>
-        <th>File Name</th>
-        <th>Size (KB)</th>
-        <th>Uploaded At</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% files.forEach(file => { %>
-        <tr>
-          <td><%= file.filename %></td>
-          <td><%= (file.size / 1024).toFixed(2) %> KB</td>
-          <td><%= file.createdAt.toLocaleDateString() %></td>
-          <td>
-            <a href="/files/download/<%= file.id %>">Download</a>
-            
-            <form action="/files/delete/<%= file.id %>" method="POST" style="display:inline;">
-              <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
-            </form>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table><br/>
-<% } else { %>
-  <p>You haven't uploaded any files yet.</p>
-<% } %>
+    <script>
+        lucide.createIcons();
+        const folderDialog = document.getElementById('folderDialog');
+        const fileDialog = document.getElementById('fileDialog');
 
- <% if (subFolders.length > 0) { %>
-    <table border="2">
-      <thead>
-        <tr>
-          <th>Folder Name</th>
-          <th>Created-At</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-           <% subFolders.forEach(element => { %>
-              <tr>
-                <td><a href="/folder/<%= element.id %> "><%= element.name %></a></td>
-                <td><%= element.createdAt %> </td> 
-                <td>
-                  <form action="/folder/delete/<%= element.id %>" method="post" style="display:inline;">
-                    <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
-                  </form>
-                </td>
-              </tr> 
-           <% }) %>
-      </tbody>
-    </table> 
-   <% } else {%>
-    <br/>
-    <% } %> 
-<a href="/files/<%= user.id %>/dashboard "><button type="submit">Return to DashBoard </button></a>
- 
-      <script>
-        const modal = document.getElementById('folderDialog');
-        const openBtn = document.getElementById('openFolderModal');
-        const closeBtn = document.getElementById('closeFolderModal');
-        
-        openBtn.addEventListener('click', () => {
-          modal.showModal(); 
-          });
-        
-        closeBtn.addEventListener('click', () => {
-          modal.close();
+        document.getElementById('openFolderModal').onclick = () => folderDialog.showModal();
+        document.getElementById('closeFolderModal').onclick = () => folderDialog.close();
+        document.getElementById('openFileModal').onclick = () => fileDialog.showModal();
+
+        [folderDialog, fileDialog].forEach(d => {
+            d.onclick = (e) => { if(e.target === d) d.close(); };
         });
-        
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) modal.close();
-        });
-      </script>
-
+    </script>
 </body>
 </html>

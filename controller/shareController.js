@@ -6,7 +6,7 @@ const {prisma}  = require('../lib/prisma');
 async function viewSharedFolder(req, res){
     const { shareId, subfolderId } = req.params;
     //console.log(shareId);
-    console.log(subfolderId);
+    //console.log(subfolderId);
 
     try {
         // 1. Find the "Root" shared folder to verify the link is valid

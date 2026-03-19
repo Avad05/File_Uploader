@@ -40,7 +40,7 @@ async function userDashboard(req, res){
                 createdAt: 'desc'
             }
         })
-        console.log(userFolders)
+        
         res.render('files',{ 
             user: req.user,
             files: userFiles,
@@ -55,14 +55,14 @@ async function userDashboard(req, res){
 }
 
 async function uploadFile(req, res) {
-    const file = req.file; // Multer should be configured to use MemoryStorage
+    const file = req.file; 
     const { folderId } = req.body;
 
    
     const filePath = `user_${req.user.id}/${Date.now()}_${file.originalname}`;
 
     try {
-        // 1. Upload to Supabase Bucket
+        // Uploading to Supabase Bucket
         const { data, error } = await supabase.storage
             .from('File_Uploader')
             .upload(filePath, file.buffer, {
@@ -71,7 +71,7 @@ async function uploadFile(req, res) {
 
         if (error) throw error;
 
-        // 2. Save the Supabase PATH to your Prisma DB (not the local path)
+        // Saving the Supabase path to your Prisma DB 
         await prisma.uploads.create({
             data: {
                 filename: file.originalname,
@@ -110,8 +110,7 @@ async function deleteFile(req, res) {
 
         if (storageError) {
             console.error("Supabase Storage Error:", storageError);
-            // Optional: You might still want to proceed with DB deletion 
-            // or stop here if storage cleanup is mandatory.
+           
         }
 
         // 3. DELETE FROM PRISMA
@@ -119,7 +118,6 @@ async function deleteFile(req, res) {
             where: { id: parseInt(fileId) }
         });
 
-        // Use 'back' to return to the folder they were just in
         res.redirect(`/files/${loggedId}/dashboard`);
 
     } catch (err) {
@@ -161,16 +159,16 @@ async function downloadFile(req, res){
 async function generateShareLink(req, res) {
     const { folderId, duration } = req.body;
     
-    // 1. Calculate the expiration date based on the days selected
+    // Calculate the expiration date based on the days selected
     const days = parseInt(duration);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + days);
 
-    // 2. Generate a long, unguessable unique ID
+    // Generate a long unique ID
     const shareId = crypto.randomUUID();
 
     try {
-        // 3. Update the folder in the DB with the share info
+        //  Update the folder in the DB with the share info
         const updatedFolder = await prisma.folders.update({
             where: { 
                 id: parseInt(folderId),
