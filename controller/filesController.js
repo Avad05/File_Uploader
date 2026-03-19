@@ -146,6 +146,7 @@ async function downloadFile(req, res){
        res.download(absolutePath, fileRecord.filename, (err) =>{
         if(err){
          res.status(402).send('Download error');
+         console.log(err);
          if (!res.headersSent) {
                     res.status(500).send("Could not download the file.");
         }
