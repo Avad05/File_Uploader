@@ -22,9 +22,10 @@ console.log("Testing prisma instance:", prisma.session ? "Found session model" :
 app.use(
   session({
     cookie: {
-     maxAge: 7 * 24 * 60 * 60 * 1000 // ms
+     maxAge: 7 * 24 * 60 * 60 * 1000,
+     secure: process.env.NODE_ENV === 'production'
     },
-    secret: 'a santa at nasa',
+    secret: process.env.SESSION_SECRET || 'a santa at nasa',
     resave: true,
     saveUninitialized: true,
     store: new PrismaSessionStore(
