@@ -126,36 +126,41 @@ async function deleteFile(req, res) {
     }
 }
 
-async function downloadFile(req, res){
-    try{
-       const id = parseInt(req.params.fileId);
+async function downloadFile(req, res) {
+    try {
+        const id = parseInt(req.params.fileId);
 
-       const fileRecord = await prisma.uploads.findUnique({
-        where: {id: id}
-       });
+        const fileRecord = await prisma.uploads.findUnique({
+            where: { id: id }
+        });
 
-       if(!fileRecord){
-        res.status(402).send('File Not Found in the Database');
-       }
-
-       if(fileRecord.userId !== req.user.id){
-        res.status(403).send('You are not Authorised to download the files');
-       }
-
-       const absolutePath = path.resolve(fileRecord.path);
-       res.download(absolutePath, fileRecord.filename, (err) =>{
-        if(err){
-         res.status(402).send('Download error');
-         console.log(err);
-         if (!res.headersSent) {
-                    res.status(500).send("Could not download the file.");
+        if (!fileRecord) {
+            return res.status(404).send('File Not Found in the Database');
         }
-       }})
 
-    }catch(err){
-        res.status(402).send(`Error ${err}`);
-    } 
+        // Security Check
+        if (fileRecord.userId !== req.user.id) {
+            return res.status(403).send('You are not Authorised to download this file');
+        }
 
+        const { data, error } = await supabase
+            .storage
+            .from('File_Uploader') // Your Bucket Name
+            .createSignedUrl(fileRecord.path, 60); // Link expires in 60 seconds
+
+        if (error) {
+            console.error("Supabase Storage Error:", error);
+            return res.status(500).send("Error generating download link from cloud storage");
+        }
+
+        // 2. Redirect the user to the signed URL
+        // This will trigger the browser's download automatically
+        res.redirect(data.signedUrl);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(`Server Error: ${err.message}`);
+    }
 }
 async function generateShareLink(req, res) {
     const { folderId, duration } = req.body;
